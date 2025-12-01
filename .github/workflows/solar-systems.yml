@@ -1,0 +1,28 @@
+name: Solar System Workflow
+
+on:
+    workflow_dispatch: 
+    push:
+      branches:
+        - main
+        - 'feature/*'
+        
+jobs:
+    Unit-Testing:
+        name: Unit testing
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+        
+        - name: Install Node JS Version - 20
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+
+        - name: Install NPM
+          run: npm install
+
+        - name: unit testing
+          run: npm test
+
