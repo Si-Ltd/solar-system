@@ -80,7 +80,7 @@ jobs:
             username: ${{vars.DOCKERHUB_USERNAME}}
             password: ${{secrets.DOCKERHUB_PASSWORD}}
 
-       - name: Build and push
+       - name: Docker Build For Testing
          uses: docker/build-push-action@v6
          with:
             context: .
@@ -99,7 +99,12 @@ jobs:
 
             echo Testing image URL using wget
             wget -q -O - http://127.0.0.1:3000/live | grep live
-
+       - name: Docker Push
+         uses: docker/build-push-action@v5
+         with:
+            context: .
+            push: true
+            tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
             
 
 
