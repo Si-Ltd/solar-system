@@ -1,0 +1,111 @@
+name: Solar System Workflow
+
+on:
+    workflow_dispatch: 
+    push:
+      branches:
+        - main
+        - 'feature/*'
+env:
+    MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+    MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+    MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}       
+jobs:
+    Unit-Testing:
+        name: Unit testing
+        strategy:
+            matrix:
+              os: [ubuntu-latest]
+              nodejs : [19, 20]
+              exclude:
+                - nodejs: 18
+                  os: windows-latest
+        runs-on: ${{matrix.os}}
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+        
+        - name: Install Node JS Version - ${{matrix.nodejs}}
+          uses: actions/setup-node@v4
+          with:
+            node-version: '${{matrix.nodejs}}'
+
+        - name: Install NPM
+          run: npm install
+
+        - name: unit testing
+          run: npm test
+        
+        - name: Archive Test Result
+          uses: actions/upload-artifact@v4
+          with:
+            name: Mocha-Test-Result
+            path: test-result.xml
+    Code-Coverage:
+        name: code coverage
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+        
+        - name: Install Node JS Version - 20
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+
+        - name: Install NPM
+          run: npm install
+
+        - name: Check Code Coverage
+          continue-on-error: true
+          run: npm run coverage 
+        
+        - name: Archive Test Result        
+          uses: actions/upload-artifact@v4
+          with:
+            name: Code-Coverage-result
+            path: coverage
+            retention-days: 3        
+    Docker:
+       name :  Containerization
+       needs: [Unit-Testing, Code-Coverage]
+       runs-on: ubuntu-latest
+       steps:
+       - name: Checkout Repo
+         uses: actions/checkout@v4
+         
+       - name:  Login to Docker Hub
+         uses: docker/login-action@v3
+         with:
+            username: ${{vars.DOCKERHUB_USERNAME}}
+            password: ${{secrets.DOCKERHUB_PASSWORD}}
+
+       - name: Docker Build For Testing
+         uses: docker/build-push-action@v6
+         with:
+            context: .
+            push: false
+            tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+      
+       - name: Test Docker Image
+         run: |
+            docker images
+            docker run --name solar-system-app -d \
+                -p 3000:3000 \
+                -e MONGO_URI=$MONGO_URI \
+                -e MONGO_USERNAME=$MONGO_USERNAME \
+                -e MONGO_PASSWORD=$MONGO_PASSWORD \
+                ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+
+            echo Testing image URL using wget
+            wget -q -O - http://127.0.0.1:3000/live | grep live
+       - name: Docker Push
+         uses: docker/build-push-action@v5
+         with:
+            context: .
+            push: true
+            tags: ${{vars.DOCKERHUB_USERNAME}}/solar-system:${{github.sha}}
+            
+
+
+
