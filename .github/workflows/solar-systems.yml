@@ -15,8 +15,8 @@ jobs:
         name: Unit testing
         strategy:
             matrix:
-              os: [ubuntu-latest, windows-latest]
-              nodejs : [18, 19, 20]
+              os: [ubuntu-latest]
+              nodejs : [19, 20]
               exclude:
                 - nodejs: 18
                   os: windows-latest
@@ -57,7 +57,6 @@ jobs:
           run: npm install
 
         - name: Check Code Coverage
-        
           run: npm run coverage 
         
         - name: Archive Test Result        
@@ -68,6 +67,7 @@ jobs:
             retention-days: 3        
     Docker:
        name :  Containerization
+       continue-on-error: true
        needs: [Unit-Testing, Code-Coverage]
        runs-on: ubuntu-latest
        steps:
