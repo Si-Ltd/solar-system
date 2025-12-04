@@ -13,23 +13,32 @@ env:
 jobs:
     Unit-Testing:
         name: Unit testing
-        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+              os: [ubuntu-latest, windows-latest]
+              nodejs : [18, 19, 20]
+              exclude:
+                - nodejs: 18
+                  os: windows-latest
+        runs-on: ${{matrix.os}}
         steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
         
-        - name: Install Node JS Version - 20
+        - name: Install Node JS Version - ${{matrix.nodejs}}
           uses: actions/setup-node@v4
           with:
-            node-version: '20'
+            node-version: '${{matrix.nodejs}}'
 
         - name: Install NPM
           run: npm install
 
         - name: unit testing
           run: npm test
+        
         - name: Archive Test Result
           uses: actions/upload-artifact@v4
           with:
             name: Mocha-Test-Result
             path: test-result.xml
+
