@@ -1,4 +1,4 @@
-name: Label Issues (Script Injection)
+name: Label Issues - Script Injection
 on:
   issues:
     types:
