@@ -1,3 +1,5 @@
+GitHub Actions - Security Hardening
+
 Let's have a look at a few good security practicies for using GitHub Actions features.
 
 So we will start witht he sensitive information. So sensitive values should never be stored as plain text in the workflow files, but rather as secrets.
